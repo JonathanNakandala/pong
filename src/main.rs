@@ -12,6 +12,11 @@ use std::sync::Arc;
 use vulkano::pipeline::ComputePipeline;
 use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 
+use vulkano::format::Format;
+use vulkano::image::Dimensions;
+use vulkano::image::StorageImage;
+
+
 fn main() {
     let instance =
         Instance::new(None, &InstanceExtensions::none(), None).expect("failed to create instance");
@@ -67,6 +72,9 @@ fn main() {
     let dest_content = dest.read().unwrap();
     assert_eq!(&*src_content, &*dest_content);
 
+    
+println!("Copied the contents of one CpuAccessibleBuffer into another!");
+
     let data_iter = 0..16384;
     let data_buffer = CpuAccessibleBuffer::from_iter(device.clone(), BufferUsage::all(), data_iter)
         .expect("failed to create buffer");
@@ -116,7 +124,7 @@ for (n, val) in content.iter().enumerate() {
     assert_eq!(*val, n as u32 * 12);
 }
 
-println!("Everything succeeded!");
+println!("Ran a shader that multiplied by 12 every value in a list of 16384!");
 
 
 }
