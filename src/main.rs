@@ -1,4 +1,6 @@
 use std::sync::Arc;
+
+use image::{ImageBuffer, Rgba};
 use vulkano::buffer::BufferUsage;
 use vulkano::buffer::CpuAccessibleBuffer;
 use vulkano::command_buffer::AutoCommandBufferBuilder;
@@ -6,17 +8,15 @@ use vulkano::command_buffer::CommandBuffer;
 use vulkano::descriptor::descriptor_set::PersistentDescriptorSet;
 use vulkano::device::Device;
 use vulkano::device::DeviceExtensions;
+use vulkano::format::ClearValue;
+use vulkano::format::Format;
+use vulkano::image::Dimensions;
+use vulkano::image::StorageImage;
 use vulkano::instance::Instance;
 use vulkano::instance::InstanceExtensions;
 use vulkano::instance::PhysicalDevice;
 use vulkano::pipeline::ComputePipeline;
 use vulkano::sync::GpuFuture;
-
-use image::{ImageBuffer, Rgba};
-use vulkano::format::ClearValue;
-use vulkano::format::Format;
-use vulkano::image::Dimensions;
-use vulkano::image::StorageImage;
 
 fn main() {
     let instance =
