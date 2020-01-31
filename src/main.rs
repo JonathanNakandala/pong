@@ -22,13 +22,14 @@ use vulkano::pipeline::viewport::Viewport;
 use vulkano::pipeline::ComputePipeline;
 use vulkano::pipeline::GraphicsPipeline;
 use vulkano::sync::GpuFuture;
+use vulkano_win::VkSurfaceBuild;
 
 fn create_device() -> (
     std::sync::Arc<vulkano::device::Device>,
     std::sync::Arc<vulkano::device::Queue>,
 ) {
-    let instance =
-        Instance::new(None, &InstanceExtensions::none(), None).expect("failed to create instance");
+    let extensions = vulkano_win::required_extensions();
+    let instance = Instance::new(None, &extensions, None).expect("failed to create instance");
     let physical = PhysicalDevice::enumerate(&instance)
         .next()
         .expect("no device available");
@@ -173,11 +174,6 @@ fn generate_solid_color_image(
         Some(queue.family()),
     )
     .unwrap();
-    println!(
-        "Generated an image with dimensions of {:?}x{}",
-        image.dimensions().width(),
-        image.dimensions().height()
-    );
 
     let cpubuf = CpuAccessibleBuffer::from_iter(
         device.clone(),
@@ -202,8 +198,14 @@ fn generate_solid_color_image(
         .unwrap();
 
     let buffer_content = cpubuf.read().unwrap();
-    let image = ImageBuffer::<Rgba<u8>, _>::from_raw(1024, 1024, &buffer_content[..]).unwrap();
-    image.save("solidcolour.png").unwrap();
+    let outputimage =
+        ImageBuffer::<Rgba<u8>, _>::from_raw(1024, 1024, &buffer_content[..]).unwrap();
+    outputimage.save("solidcolour.png").unwrap();
+    println!(
+        "Generated a solid colour image with dimensions of {:?}x{}",
+        image.dimensions().width(),
+        image.dimensions().height()
+    );
 }
 
 fn generate_triangle_image(
@@ -373,6 +375,7 @@ fn generate_triangle_image(
     let buffer_content = read_buffer.read().unwrap();
     let image = ImageBuffer::<Rgba<u8>, _>::from_raw(1024, 1024, &buffer_content[..]).unwrap();
     image.save("triangle.png").unwrap();
+    println!("Generated a multicoloured triangle with a blue background");
 }
 
 fn main() {
