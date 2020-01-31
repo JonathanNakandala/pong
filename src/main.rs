@@ -206,12 +206,10 @@ fn generate_solid_color_image(
     image.save("solidcolour.png").unwrap();
 }
 
-fn main() {
-    let (device, queue) = create_device();
-    copy_image_to_buffer(device.clone(), queue.clone());
-    multiply_lots_of_values(device.clone(), queue.clone());
-    generate_solid_color_image(device.clone(), queue.clone());
-
+fn generate_triangle_image(
+    device: std::sync::Arc<vulkano::device::Device>,
+    queue: std::sync::Arc<vulkano::device::Queue>,
+) {
     let image = StorageImage::new(
         device.clone(),
         Dimensions::Dim2d {
@@ -285,9 +283,16 @@ fn main() {
             #version 450
             
             layout(location = 0) in vec2 position;
+            layout(location = 0) out vec3 fragColour;
+            vec3 colours[3] = vec3[](
+                vec3(1.0, 0.0, 0.0),
+                vec3(0.0, 1.0, 0.0),
+                vec3(0.0, 0.0, 1.0)
+            );
             
             void main() {
                 gl_Position = vec4(position, 0.0, 1.0);
+                fragColour = colours[gl_VertexIndex];
             }
             "
         }
@@ -298,11 +303,12 @@ fn main() {
             ty: "fragment",
             src:"
             #version 450
-
+            
+            layout(location = 0) in vec3 fragColour;
             layout(location = 0) out vec4 f_color;
             
             void main() {
-                f_color = vec4(1.0, 0.0, 0.0, 1.0);
+                f_color = vec4(fragColour, 1.0);
             }
             "
         }
@@ -367,4 +373,12 @@ fn main() {
     let buffer_content = read_buffer.read().unwrap();
     let image = ImageBuffer::<Rgba<u8>, _>::from_raw(1024, 1024, &buffer_content[..]).unwrap();
     image.save("triangle.png").unwrap();
+}
+
+fn main() {
+    let (device, queue) = create_device();
+    copy_image_to_buffer(device.clone(), queue.clone());
+    multiply_lots_of_values(device.clone(), queue.clone());
+    generate_solid_color_image(device.clone(), queue.clone());
+    generate_triangle_image(device.clone(), queue.clone());
 }
