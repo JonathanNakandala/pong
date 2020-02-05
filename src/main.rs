@@ -205,8 +205,28 @@ fn main() {
         window_size_dependent_setup(&images, render_pass.clone(), &mut dynamic_state);
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
+    let mut displacement_amount = 0;
+    let mut displacement_increment = false;
+    let displacement_constant = 1;
+
     loop {
-        let pc_player1 = vs_player1::ty::Displacement { displacement: 0.5 };
+        if displacement_amount == 150 || displacement_amount == 0 {
+            displacement_increment = !displacement_increment;
+        }
+        if displacement_increment == true {
+            displacement_amount += displacement_constant;
+        }
+        if displacement_increment == false {
+            displacement_amount -= displacement_constant;
+        }
+
+        let pc_player1 = vs_player1::ty::Displacement {
+            displacement: displacement_amount as f32 / 100.0,
+        };
+
+        let pc_player2 = vs_player2::ty::Displacement {
+            displacement: -displacement_amount as f32 / 100.0,
+        };
         let vertex_buffer_player1 = {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
@@ -221,27 +241,27 @@ fn main() {
                 BufferUsage::all(),
                 [
                     Vertex {
-                        position: [-0.9, -0.9],
+                        position: [-0.9, -1.0],
                         color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.8, -0.9],
+                        position: [-0.8, -1.0],
                         color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.9, -0.4],
+                        position: [-0.9, -0.5],
                         color: [0.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.8, -0.9],
+                        position: [-0.8, -1.0],
                         color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.8, -0.4],
+                        position: [-0.8, -0.5],
                         color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.9, -0.4],
+                        position: [-0.9, -0.5],
                         color: [0.0, 1.0, 1.0],
                     },
                 ]
@@ -265,27 +285,27 @@ fn main() {
                 BufferUsage::all(),
                 [
                     Vertex {
-                        position: [0.9, 0.9],
+                        position: [0.9, 1.0],
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.8, 0.9],
+                        position: [0.8, 1.0],
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.9, 0.4],
+                        position: [0.9, 0.5],
                         colour: [0.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.8, 0.9],
+                        position: [0.8, 1.0],
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.8, 0.4],
+                        position: [0.8, 0.5],
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.9, 0.4],
+                        position: [0.9, 0.5],
                         colour: [0.0, 1.0, 1.0],
                     },
                 ]
@@ -371,7 +391,7 @@ fn main() {
                     &dynamic_state,
                     vertex_buffer_player2.clone(),
                     (),
-                    (),
+                    pc_player2,
                 )
                 .unwrap()
                 .end_render_pass()
