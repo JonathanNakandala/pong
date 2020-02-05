@@ -117,18 +117,10 @@ fn main() {
 
     // Create the Vertex and Fragment Shaders
 
-    mod vs {
+    mod vs_player1 {
         vulkano_shaders::shader! {
             ty: "vertex",
-            src: "
-                #version 450
-                layout(location = 0) in vec2 position;
-                layout(location = 1) in vec3 color;
-                layout(location = 0) out vec3 fragColor;
-                void main() {
-                    gl_Position = vec4(position, 0.0, 1.0);
-                    fragColor = color;
-                }"
+            path: "src/shaders/player1.vs"
         }
     }
 
@@ -139,39 +131,23 @@ fn main() {
         }
     }
 
-    mod fs {
+    mod fs_player1 {
         vulkano_shaders::shader! {
             ty: "fragment",
-            src: "
-                    #version 450
-                    layout(location = 0) in vec3 fragColor;
-                    layout(location = 0) out vec4 f_color;
-                    void main() {                        
-                        
-                        f_color = vec4(fragColor, 1.0);
-                    }
-                    "
+            path: "src/shaders/player1.fs"
         }
     }
 
     mod fs_player2 {
         vulkano_shaders::shader! {
             ty: "fragment",
-            src: "
-                    #version 450
-                    layout(location = 0) in vec3 fragColor;
-                    layout(location = 0) out vec4 f_color;
-                    void main() {                        
-                        
-                        f_color = vec4(fragColor, 1.0);
-                    }
-                    "
+            path: "src/shaders/player2.fs"
         }
     }
 
-    let vs = vs::Shader::load(device.clone()).unwrap();
+    let vs_player1 = vs_player1::Shader::load(device.clone()).unwrap();
+    let fs_player1 = fs_player1::Shader::load(device.clone()).unwrap();
     let vs_player2 = vs_player2::Shader::load(device.clone()).unwrap();
-    let fs = fs::Shader::load(device.clone()).unwrap();
     let fs_player2 = fs_player2::Shader::load(device.clone()).unwrap();
 
     // Create Render Pass
@@ -196,10 +172,10 @@ fn main() {
     let pipeline = Arc::new(
         GraphicsPipeline::start()
             .vertex_input_single_buffer()
-            .vertex_shader(vs.main_entry_point(), ())
+            .vertex_shader(vs_player1.main_entry_point(), ())
             .triangle_list()
             .viewports_dynamic_scissors_irrelevant(1)
-            .fragment_shader(fs.main_entry_point(), ())
+            .fragment_shader(fs_player1.main_entry_point(), ())
             .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
             .build(device.clone())
             .unwrap(),
@@ -230,7 +206,7 @@ fn main() {
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
     loop {
-        let vertex_buffer = {
+        let vertex_buffer_player1 = {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
                 position: [f32; 2],
@@ -384,7 +360,7 @@ fn main() {
                 .draw(
                     pipeline.clone(),
                     &dynamic_state,
-                    vertex_buffer.clone(),
+                    vertex_buffer_player1.clone(),
                     (),
                     (),
                 )
