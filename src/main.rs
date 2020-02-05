@@ -17,9 +17,13 @@ use vulkano_win::VkSurfaceBuild;
 
 use winit::{Event, EventsLoop, Window, WindowBuilder, WindowEvent};
 
+use rand::Rng;
 use std::sync::Arc;
 
 fn main() {
+    let mut rng = rand::thread_rng();
+    println!("Float: {}", rng.gen_range(-1.0, 1.0));
+    println!("Float: {}", rng.gen_range(-1.0, 1.0));
     // Create a Vulkan Instance and selecting extensions to enable
     let extensions = vulkano_win::required_extensions();
     let instance = Instance::new(None, &extensions, None).expect("failed to create instance");
@@ -111,32 +115,6 @@ fn main() {
         .unwrap()
     };
 
-    let vertex_buffer = {
-        #[derive(Default, Debug, Clone)]
-        struct Vertex {
-            position: [f32; 2],
-        }
-        vulkano::impl_vertex!(Vertex, position);
-        CpuAccessibleBuffer::from_iter(
-            device.clone(),
-            BufferUsage::all(),
-            [
-                Vertex {
-                    position: [-0.5, -0.25],
-                },
-                Vertex {
-                    position: [0.0, 0.5],
-                },
-                Vertex {
-                    position: [0.25, -0.1],
-                },
-            ]
-            .iter()
-            .cloned(),
-        )
-        .unwrap()
-    };
-
     // Create the Vertex and Fragment Shaders
 
     mod vs {
@@ -145,8 +123,29 @@ fn main() {
             src: "
                 #version 450
                 layout(location = 0) in vec2 position;
+                //layout(location = 2) in vec2 offset;
+                layout(location = 1) out vec3 fragColor;
+                vec3 colors[15] = vec3[](
+                    vec3(1.0, 0.0, 0.0),
+                    vec3(0.0, 1.0, 0.0),
+                    vec3(0.0, 0.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(0.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(0.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(0.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(0.0, 1.0, 1.0)
+                );
                 void main() {
+                    //vec4 totalOffset = vec4(offset.x, offset.y, 0.0, 0.0);
                     gl_Position = vec4(position, 0.0, 1.0);
+                    fragColor = colors[gl_VertexIndex];
                 }"
         }
     }
@@ -156,11 +155,11 @@ fn main() {
             ty: "fragment",
             src: "
                     #version 450
+                    layout(location = 1) in vec3 fragColor;
                     layout(location = 0) out vec4 f_color;
-                    float u_time;
                     void main() {                        
                         
-                        f_color = vec4(abs(sin(u_time)),0.0,0.0,1.0);
+                        f_color = vec4(fragColor, 1.0);
                     }
                     "
         }
@@ -213,6 +212,90 @@ fn main() {
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
     loop {
+        let vertex_buffer = {
+            #[derive(Default, Debug, Clone)]
+            struct Vertex {
+                position: [f32; 2],
+            }
+
+            vulkano::impl_vertex!(Vertex, position);
+
+            CpuAccessibleBuffer::from_iter(
+                device.clone(),
+                BufferUsage::all(),
+                [
+                    Vertex {
+                        position: [rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0)],
+                    },
+                    Vertex {
+                        position: [rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0)],
+                    },
+                    Vertex {
+                        position: [0.25, -0.1],
+                    },
+                    // Player 1 Paddle
+                    Vertex {
+                        position: [-0.9, -0.9],
+                    },
+                    Vertex {
+                        position: [-0.8, -0.9],
+                    },
+                    Vertex {
+                        position: [-0.9, -0.4],
+                    },
+                    Vertex {
+                        position: [-0.8, -0.9],
+                    },
+                    Vertex {
+                        position: [-0.8, -0.4],
+                    },
+                    Vertex {
+                        position: [-0.9, -0.4],
+                    },
+                    // Player 2 Paddle
+                    Vertex {
+                        position: [0.9, 0.9],
+                    },
+                    Vertex {
+                        position: [0.8, 0.9],
+                    },
+                    Vertex {
+                        position: [0.9, 0.4],
+                    },
+                    Vertex {
+                        position: [0.8, 0.9],
+                    },
+                    Vertex {
+                        position: [0.8, 0.4],
+                    },
+                    Vertex {
+                        position: [0.9, 0.4],
+                    },
+                ]
+                .iter()
+                .cloned(),
+            )
+            .unwrap()
+        };
+
+        let offset_buffer = {
+            #[derive(Default, Debug, Clone)]
+            struct Offset {
+                position: [f32; 2],
+            }
+
+            CpuAccessibleBuffer::from_iter(
+                device.clone(),
+                BufferUsage::all(),
+                [Offset {
+                    position: [rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0)],
+                }]
+                .iter()
+                .cloned(),
+            )
+            .unwrap()
+        };
+
         // Frees no longer needed resources
         previous_frame_end.cleanup_finished();
         // Window Resize: Recreate swapchain, framebuffer and viewport
@@ -248,7 +331,7 @@ fn main() {
                 Err(err) => panic!("{:?}", err),
             };
         // Clear the screen with a colour
-        let clear_values = vec![[0.0, 0.0, 1.0, 1.0].into()];
+        let clear_values = vec![[0.0, 0.0, 0.0, 1.0].into()];
 
         // In order to draw, we have to build a *command buffer*.
         let command_buffer =
