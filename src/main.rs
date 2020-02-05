@@ -123,29 +123,11 @@ fn main() {
             src: "
                 #version 450
                 layout(location = 0) in vec2 position;
-                //layout(location = 2) in vec2 offset;
-                layout(location = 1) out vec3 fragColor;
-                vec3 colors[15] = vec3[](
-                    vec3(1.0, 0.0, 0.0),
-                    vec3(0.0, 1.0, 0.0),
-                    vec3(0.0, 0.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(0.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(0.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(0.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(1.0, 1.0, 1.0),
-                    vec3(0.0, 1.0, 1.0)
-                );
+                layout(location = 1) in vec3 color;
+                layout(location = 0) out vec3 fragColor;
                 void main() {
-                    //vec4 totalOffset = vec4(offset.x, offset.y, 0.0, 0.0);
                     gl_Position = vec4(position, 0.0, 1.0);
-                    fragColor = colors[gl_VertexIndex];
+                    fragColor = color;
                 }"
         }
     }
@@ -162,7 +144,7 @@ fn main() {
             ty: "fragment",
             src: "
                     #version 450
-                    layout(location = 1) in vec3 fragColor;
+                    layout(location = 0) in vec3 fragColor;
                     layout(location = 0) out vec4 f_color;
                     void main() {                        
                         
@@ -177,8 +159,8 @@ fn main() {
             ty: "fragment",
             src: "
                     #version 450
-                    layout(location = 4) in vec3 fragColor;
-                    layout(location = 3) out vec4 f_color;
+                    layout(location = 0) in vec3 fragColor;
+                    layout(location = 0) out vec4 f_color;
                     void main() {                        
                         
                         f_color = vec4(fragColor, 1.0);
@@ -188,9 +170,9 @@ fn main() {
     }
 
     let vs = vs::Shader::load(device.clone()).unwrap();
-    let vs_player2 = vs::Shader::load(device.clone()).unwrap();
+    let vs_player2 = vs_player2::Shader::load(device.clone()).unwrap();
     let fs = fs::Shader::load(device.clone()).unwrap();
-    let fs_player2 = fs::Shader::load(device.clone()).unwrap();
+    let fs_player2 = fs_player2::Shader::load(device.clone()).unwrap();
 
     // Create Render Pass
     let render_pass = Arc::new(
@@ -252,41 +234,38 @@ fn main() {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
                 position: [f32; 2],
+                color: [f32; 3],
             }
 
-            vulkano::impl_vertex!(Vertex, position);
+            vulkano::impl_vertex!(Vertex, position, color);
 
             CpuAccessibleBuffer::from_iter(
                 device.clone(),
                 BufferUsage::all(),
                 [
                     Vertex {
-                        position: [rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0)],
-                    },
-                    Vertex {
-                        position: [rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0)],
-                    },
-                    Vertex {
-                        position: [0.25, -0.1],
-                    },
-                    // Player 1 Paddle
-                    Vertex {
                         position: [-0.9, -0.9],
+                        color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [-0.8, -0.9],
+                        color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [-0.9, -0.4],
+                        color: [0.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [-0.8, -0.9],
+                        color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [-0.8, -0.4],
+                        color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [-0.9, -0.4],
+                        color: [0.0, 1.0, 1.0],
                     },
                 ]
                 .iter()
@@ -299,32 +278,38 @@ fn main() {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
                 position: [f32; 2],
+                colour: [f32; 3],
             }
 
-            vulkano::impl_vertex!(Vertex, position);
+            vulkano::impl_vertex!(Vertex, position, colour);
 
             CpuAccessibleBuffer::from_iter(
                 device.clone(),
                 BufferUsage::all(),
                 [
-                    // Player 2 Paddle
                     Vertex {
                         position: [0.9, 0.9],
+                        colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [0.8, 0.9],
+                        colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [0.9, 0.4],
+                        colour: [0.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [0.8, 0.9],
+                        colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [0.8, 0.4],
+                        colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
                         position: [0.9, 0.4],
+                        colour: [0.0, 1.0, 1.0],
                     },
                 ]
                 .iter()
@@ -386,7 +371,7 @@ fn main() {
                 Err(err) => panic!("{:?}", err),
             };
         // Clear the screen with a colour
-        let clear_values = vec![[0.0, 0.0, 0.0, 1.0].into()];
+        let clear_values = vec![[0.0, 0.0, 0.0, 0.0].into()];
 
         // In order to draw, we have to build a *command buffer*.
         let command_buffer =
@@ -412,7 +397,6 @@ fn main() {
                     (),
                 )
                 .unwrap()
-                // We leave the render pass by calling `draw_end`.
                 .end_render_pass()
                 .unwrap()
                 // Finish building the command buffer by calling `build`.
