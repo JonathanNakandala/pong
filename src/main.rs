@@ -150,6 +150,30 @@ fn main() {
         }
     }
 
+    mod vs_player2 {
+        vulkano_shaders::shader! {
+            ty: "vertex",
+            src: "
+                #version 450
+                layout(location = 3) in vec2 position;
+                //layout(location = 2) in vec2 offset;
+                layout(location = 4) out vec3 fragColor;
+                vec3 colorsss[6] = vec3[](
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(0.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(1.0, 1.0, 1.0),
+                    vec3(0.0, 1.0, 1.0)
+                );
+                void main() {
+                    //vec4 totalOffset = vec4(offset.x, offset.y, 0.0, 0.0);
+                    gl_Position = vec4(position, 0.0, 1.0);
+                    fragColor = colorsss[gl_VertexIndex];
+                }"
+        }
+    }
+
     mod fs {
         vulkano_shaders::shader! {
             ty: "fragment",
@@ -165,8 +189,25 @@ fn main() {
         }
     }
 
+    mod fs_player2 {
+        vulkano_shaders::shader! {
+            ty: "fragment",
+            src: "
+                    #version 450
+                    layout(location = 4) in vec3 fragColor;
+                    layout(location = 3) out vec4 f_color;
+                    void main() {                        
+                        
+                        f_color = vec4(fragColor, 1.0);
+                    }
+                    "
+        }
+    }
+
     let vs = vs::Shader::load(device.clone()).unwrap();
+    let vs_player2 = vs::Shader::load(device.clone()).unwrap();
     let fs = fs::Shader::load(device.clone()).unwrap();
+    let fs_player2 = fs::Shader::load(device.clone()).unwrap();
 
     // Create Render Pass
     let render_pass = Arc::new(
@@ -194,6 +235,18 @@ fn main() {
             .triangle_list()
             .viewports_dynamic_scissors_irrelevant(1)
             .fragment_shader(fs.main_entry_point(), ())
+            .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
+            .build(device.clone())
+            .unwrap(),
+    );
+
+    let pipeline_player2 = Arc::new(
+        GraphicsPipeline::start()
+            .vertex_input_single_buffer()
+            .vertex_shader(vs_player2.main_entry_point(), ())
+            .triangle_list()
+            .viewports_dynamic_scissors_irrelevant(1)
+            .fragment_shader(fs_player2.main_entry_point(), ())
             .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
             .build(device.clone())
             .unwrap(),
@@ -252,6 +305,25 @@ fn main() {
                     Vertex {
                         position: [-0.9, -0.4],
                     },
+                ]
+                .iter()
+                .cloned(),
+            )
+            .unwrap()
+        };
+
+        let vertex_buffer_player2 = {
+            #[derive(Default, Debug, Clone)]
+            struct Vertex {
+                position: [f32; 2],
+            }
+
+            vulkano::impl_vertex!(Vertex, position);
+
+            CpuAccessibleBuffer::from_iter(
+                device.clone(),
+                BufferUsage::all(),
+                [
                     // Player 2 Paddle
                     Vertex {
                         position: [0.9, 0.9],
@@ -345,6 +417,14 @@ fn main() {
                     pipeline.clone(),
                     &dynamic_state,
                     vertex_buffer.clone(),
+                    (),
+                    (),
+                )
+                .unwrap()
+                .draw(
+                    pipeline_player2.clone(),
+                    &dynamic_state,
+                    vertex_buffer_player2.clone(),
                     (),
                     (),
                 )
