@@ -206,6 +206,7 @@ fn main() {
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
     loop {
+        let pc_player1 = vs_player1::ty::Displacement { displacement: 0.5 };
         let vertex_buffer_player1 = {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
@@ -362,7 +363,7 @@ fn main() {
                     &dynamic_state,
                     vertex_buffer_player1.clone(),
                     (),
-                    (),
+                    pc_player1,
                 )
                 .unwrap()
                 .draw(
