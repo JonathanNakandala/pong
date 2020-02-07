@@ -15,7 +15,7 @@ use vulkano::sampler::{Filter, MipmapMode, Sampler, SamplerAddressMode};
 
 use crate::{Error, GpuCache, Section};
 
-#[derive(Debug)]
+#[derive(Default, Debug, Clone)]
 struct Vertex {
     tl: [f32; 2],
     br: [f32; 2],
@@ -30,7 +30,7 @@ impl_vertex! { Vertex, tl, br, tex_tl, tex_br, color }
 mod vs {
     vulkano_shaders::shader! {
         ty: "vertex",
-        path: "shader/vert.glsl",
+        path: "./src/shader/vert.glsl",
     }
 }
 
@@ -38,7 +38,7 @@ mod vs {
 mod fs {
     vulkano_shaders::shader! {
         ty: "fragment",
-        path: "shader/frag.glsl"
+        path: "./src/shader/frag.glsl"
     }
 }
 

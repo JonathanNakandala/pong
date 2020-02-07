@@ -14,3 +14,4 @@ vulkano-win = "0.16.0"
 winit = "0.19.5"
 rand = "0.7.3"
 rusttype = "0.8.2"
+vulkano-glyph = {path = "../vulkano-glyph"}

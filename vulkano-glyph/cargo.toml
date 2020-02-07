@@ -13,3 +13,9 @@ edition = "2018"
 vulkano = "0.16"
 vulkano-shaders = "0.16"
 log = "0.4.0"
+
+
+
+[dependencies.rusttype]
+version = "0.7.0"
+features = ["gpu_cache"]
