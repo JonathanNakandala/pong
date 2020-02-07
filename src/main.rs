@@ -124,17 +124,17 @@ fn main() {
         }
     }
 
-    mod vs_player2 {
-        vulkano_shaders::shader! {
-            ty: "vertex",
-            path: "src/shaders/player2.vs"
-        }
-    }
-
     mod fs_player1 {
         vulkano_shaders::shader! {
             ty: "fragment",
             path: "src/shaders/player1.fs"
+        }
+    }
+
+    mod vs_player2 {
+        vulkano_shaders::shader! {
+            ty: "vertex",
+            path: "src/shaders/player2.vs"
         }
     }
 
@@ -145,11 +145,26 @@ fn main() {
         }
     }
 
+    mod vs_net {
+        vulkano_shaders::shader! {
+            ty: "vertex",
+            path: "src/shaders/net.vs"
+        }
+    }
+
+    mod fs_net {
+        vulkano_shaders::shader! {
+            ty: "fragment",
+            path: "src/shaders/net.fs"
+        }
+    }
+
     let vs_player1 = vs_player1::Shader::load(device.clone()).unwrap();
     let fs_player1 = fs_player1::Shader::load(device.clone()).unwrap();
     let vs_player2 = vs_player2::Shader::load(device.clone()).unwrap();
     let fs_player2 = fs_player2::Shader::load(device.clone()).unwrap();
-
+    let vs_net = vs_net::Shader::load(device.clone()).unwrap();
+    let fs_net = fs_net::Shader::load(device.clone()).unwrap();
     // Create Render Pass
     let render_pass = Arc::new(
         vulkano::single_pass_renderpass!(
@@ -188,6 +203,18 @@ fn main() {
             .triangle_list()
             .viewports_dynamic_scissors_irrelevant(1)
             .fragment_shader(fs_player2.main_entry_point(), ())
+            .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
+            .build(device.clone())
+            .unwrap(),
+    );
+
+    let pipeline_net = Arc::new(
+        GraphicsPipeline::start()
+            .vertex_input_single_buffer()
+            .vertex_shader(vs_net.main_entry_point(), ())
+            .triangle_list()
+            .viewports_dynamic_scissors_irrelevant(1)
+            .fragment_shader(fs_net.main_entry_point(), ())
             .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
             .build(device.clone())
             .unwrap(),
@@ -315,6 +342,50 @@ fn main() {
             .unwrap()
         };
 
+        let vertex_buffer_net = {
+            #[derive(Default, Debug, Clone)]
+            struct Vertex {
+                position: [f32; 2],
+                color: [f32; 3],
+            }
+
+            vulkano::impl_vertex!(Vertex, position, color);
+
+            CpuAccessibleBuffer::from_iter(
+                device.clone(),
+                BufferUsage::all(),
+                [
+                    Vertex {
+                        position: [-0.005, -1.0],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [0.005, -1.0],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [-0.005, 1.0],
+                        color: [0.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [-0.005, 1.0],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [0.005, 1.0],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [0.005, -1.0],
+                        color: [0.0, 1.0, 1.0],
+                    },
+                ]
+                .iter()
+                .cloned(),
+            )
+            .unwrap()
+        };
+
         let offset_buffer = {
             #[derive(Default, Debug, Clone)]
             struct Offset {
@@ -378,6 +449,14 @@ fn main() {
                 .begin_render_pass(framebuffers[image_num].clone(), false, clear_values)
                 .unwrap()
                 // The first subpass of the render pass: We add a draw command.
+                .draw(
+                    pipeline_net.clone(),
+                    &dynamic_state,
+                    vertex_buffer_net.clone(),
+                    (),
+                    (),
+                )
+                .unwrap()
                 .draw(
                     pipeline.clone(),
                     &dynamic_state,
