@@ -21,9 +21,10 @@ use rand::Rng;
 use std::sync::Arc;
 
 fn main() {
+    // Random Number Generator
     let mut rng = rand::thread_rng();
-    println!("Float: {}", rng.gen_range(-1.0, 1.0));
-    println!("Float: {}", rng.gen_range(-1.0, 1.0));
+    //println!("Float: {}", rng.gen_range(-1.0, 1.0));
+    //println!("Float: {}", rng.gen_range(-1.0, 1.0));
     // Create a Vulkan Instance and selecting extensions to enable
     let extensions = vulkano_win::required_extensions();
     let instance = Instance::new(None, &extensions, None).expect("failed to create instance");

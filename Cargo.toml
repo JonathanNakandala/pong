@@ -1,15 +1,2 @@
-[package]
-name = "pong"
-version = "0.1.0"
-authors = ["jonat"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-vulkano = "0.16"
-vulkano-shaders = "0.16"
-image = "0.21"
-vulkano-win = "0.16.0"
-winit = "0.19.5"
-rand = "0.7.3"
+[workspace]
+members = ["pong"]
