@@ -271,7 +271,7 @@ fn main() {
 
     let mut ball_displacement: [i32; 2] = [0; 2];
 
-    fn displace_player1(direction: String, displacement: i32) -> i32 {
+    fn displace_player(direction: String, displacement: i32) -> i32 {
         if (displacement == 150 && direction == "Down") || (displacement == 0 && direction == "Up")
         {
             return displacement;
@@ -285,6 +285,7 @@ fn main() {
     }
 
     let mut score_player1: u8 = 0;
+    let mut score_player2: u8 = 0;
 
     loop {
         // Auto Move ball
@@ -514,7 +515,13 @@ fn main() {
             [0.0, 1.0, 1.0, 1.0],
             &score_player1.to_string(),
         );
-        draw_text.queue_text(800.0, 200.0, 190.0, [0.0, 1.0, 1.0, 1.0], "0");
+        draw_text.queue_text(
+            800.0,
+            200.0,
+            190.0,
+            [0.0, 1.0, 1.0, 1.0],
+            &score_player2.to_string(),
+        );
 
         // Frees no longer needed resources
         previous_frame_end.cleanup_finished();
@@ -651,7 +658,7 @@ fn main() {
                     },
                 ..
             } => {
-                player_1_displacement = displace_player1("Up".to_owned(), player_1_displacement);
+                player_1_displacement = displace_player("Up".to_owned(), player_1_displacement);
             }
             Event::WindowEvent {
                 event:
@@ -666,7 +673,7 @@ fn main() {
                     },
                 ..
             } => {
-                player_1_displacement = displace_player1("Down".to_owned(), player_1_displacement);
+                player_1_displacement = displace_player("Down".to_owned(), player_1_displacement);
             }
             Event::WindowEvent {
                 event: WindowEvent::Resized(_),
