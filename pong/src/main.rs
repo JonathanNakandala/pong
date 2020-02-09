@@ -14,20 +14,15 @@ use vulkano::sync;
 use vulkano::sync::{FlushError, GpuFuture};
 
 use vulkano_win::VkSurfaceBuild;
+use winit::{
+    ElementState, Event, EventsLoop, KeyboardInput, VirtualKeyCode, Window, WindowBuilder,
+    WindowEvent,
+};
 
-use winit::ControlFlow;
-use winit::VirtualKeyCode;
-use winit::{ElementState, Event, EventsLoop, KeyboardInput, Window, WindowBuilder, WindowEvent};
-
-use rand::Rng;
 use std::sync::Arc;
 use vulkano_text::{DrawText, DrawTextTrait};
 
 fn main() {
-    // Random Number Generator
-    let mut rng = rand::thread_rng();
-    //println!("Float: {}", rng.gen_range(-1.0, 1.0));
-    //println!("Float: {}", rng.gen_range(-1.0, 1.0));
     // Create a Vulkan Instance and selecting extensions to enable
     let extensions = vulkano_win::required_extensions();
     let instance = Instance::new(None, &extensions, None).expect("failed to create instance");
@@ -162,34 +157,29 @@ fn main() {
             path: "src/shaders/net.fs"
         }
     }
+    mod vs_ball {
+        vulkano_shaders::shader! {
+            ty: "vertex",
+            path: "src/shaders/ball.vs"
+        }
+    }
 
+    mod fs_ball {
+        vulkano_shaders::shader! {
+            ty: "fragment",
+            path: "src/shaders/ball.fs"
+        }
+    }
     let vs_player1 = vs_player1::Shader::load(device.clone()).unwrap();
     let fs_player1 = fs_player1::Shader::load(device.clone()).unwrap();
     let vs_player2 = vs_player2::Shader::load(device.clone()).unwrap();
     let fs_player2 = fs_player2::Shader::load(device.clone()).unwrap();
     let vs_net = vs_net::Shader::load(device.clone()).unwrap();
     let fs_net = fs_net::Shader::load(device.clone()).unwrap();
+    let vs_ball = vs_ball::Shader::load(device.clone()).unwrap();
+    let fs_ball = fs_ball::Shader::load(device.clone()).unwrap();
     // Create Render Pass
     let render_pass = Arc::new(
-        vulkano::single_pass_renderpass!(
-            device.clone(),
-            attachments: {
-                color: {
-                    load: Clear,
-                    store: Store,
-                    format: swapchain.format(),
-                    samples: 1,
-                }
-            },
-            pass: {
-                color: [color],
-                depth_stencil: {}
-            }
-        )
-        .unwrap(),
-    );
-
-    let text_render_pass = Arc::new(
         vulkano::single_pass_renderpass!(
             device.clone(),
             attachments: {
@@ -249,6 +239,18 @@ fn main() {
             .unwrap(),
     );
 
+    let pipeline_ball = Arc::new(
+        GraphicsPipeline::start()
+            .vertex_input_single_buffer()
+            .vertex_shader(vs_ball.main_entry_point(), ())
+            .triangle_list()
+            .viewports_dynamic_scissors_irrelevant(1)
+            .fragment_shader(fs_ball.main_entry_point(), ())
+            .render_pass(Subpass::from(render_pass.clone(), 0).unwrap())
+            .build(device.clone())
+            .unwrap(),
+    );
+
     let mut dynamic_state = DynamicState {
         line_width: None,
         viewports: None,
@@ -264,7 +266,10 @@ fn main() {
     let mut player_1_displacement = 0;
     let mut displacement_amount = 0;
     let mut displacement_increment = false;
+    let mut ball_displacement_increment = false;
     let displacement_constant = 1;
+
+    let mut ball_displacement: [i32; 2] = [0; 2];
 
     fn displace_player1(direction: String, displacement: i32) -> i32 {
         if (displacement == 150 && direction == "Down") || (displacement == 0 && direction == "Up")
@@ -279,7 +284,24 @@ fn main() {
         displacement
     }
 
+    let mut score_player1: u8 = 0;
+
     loop {
+        // Auto Move ball
+        if ball_displacement[0] == -100 || ball_displacement[0] == 10 {
+            ball_displacement_increment = !ball_displacement_increment;
+        }
+
+        if ball_displacement[0] == -100 {
+            score_player1 = score_player1 + 1;
+        }
+        if ball_displacement_increment == true {
+            ball_displacement[0] += displacement_constant;
+        }
+        if ball_displacement_increment == false {
+            ball_displacement[0] -= displacement_constant;
+        }
+        // Auto Move Player
         if displacement_amount == 150 || displacement_amount == 0 {
             displacement_increment = !displacement_increment;
         }
@@ -296,6 +318,14 @@ fn main() {
         let pc_player2 = vs_player2::ty::Displacement {
             displacement: -displacement_amount as f32 / 100.0,
         };
+
+        let pc_ball = vs_ball::ty::BallPosition {
+            vector: [ball_displacement[0] as f32 / 100.0, 0.0],
+        };
+
+        if pc_ball.vector[0] < -1.0 {
+            println!("{}", pc_ball.vector[0]);
+        }
         let vertex_buffer_player1 = {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
@@ -428,12 +458,62 @@ fn main() {
             .unwrap()
         };
 
+        let vertex_buffer_ball = {
+            #[derive(Default, Debug, Clone)]
+            struct Vertex {
+                position: [f32; 2],
+                color: [f32; 3],
+            }
+
+            vulkano::impl_vertex!(Vertex, position, color);
+
+            CpuAccessibleBuffer::from_iter(
+                device.clone(),
+                BufferUsage::all(),
+                [
+                    Vertex {
+                        position: [-0.03, -0.03],
+                        color: [1.0, 0.0, 1.0],
+                    },
+                    Vertex {
+                        position: [0.03, -0.03],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [-0.03, 0.03],
+                        color: [0.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [-0.03, 0.03],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [0.03, 0.03],
+                        color: [1.0, 1.0, 1.0],
+                    },
+                    Vertex {
+                        position: [0.03, -0.03],
+                        color: [0.0, 1.0, 1.0],
+                    },
+                ]
+                .iter()
+                .cloned(),
+            )
+            .unwrap()
+        };
+
         if x > width as f32 {
             x = 0.0;
         } else {
             x += 0.4;
         }
-        draw_text.queue_text(630.0, 200.0, 190.0, [0.0, 1.0, 1.0, 1.0], "0");
+        draw_text.queue_text(
+            630.0,
+            200.0,
+            190.0,
+            [0.0, 1.0, 1.0, 1.0],
+            &score_player1.to_string(),
+        );
         draw_text.queue_text(800.0, 200.0, 190.0, [0.0, 1.0, 1.0, 1.0], "0");
 
         // Frees no longer needed resources
@@ -478,8 +558,6 @@ fn main() {
             };
         // Clear the screen with a colour
         let clear_values = vec![[0.0, 0.0, 0.0, 0.0].into()];
-        let text_clear_values: std::vec::Vec<vulkano::format::ClearValue> =
-            vec![[0.0, 0.0, 0.0, 0.0].into()];
 
         // In order to draw, we have to build a *command buffer*.
         let command_buffer =
@@ -511,6 +589,14 @@ fn main() {
                     vertex_buffer_player2.clone(),
                     (),
                     pc_player2,
+                )
+                .unwrap()
+                .draw(
+                    pipeline_ball.clone(),
+                    &dynamic_state,
+                    vertex_buffer_ball.clone(),
+                    (),
+                    pc_ball,
                 )
                 .unwrap();
         let command_buffer = command_buffer
