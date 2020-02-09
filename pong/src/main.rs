@@ -15,12 +15,11 @@ use vulkano::sync::{FlushError, GpuFuture};
 
 use vulkano_win::VkSurfaceBuild;
 
-use winit::{Event, EventsLoop, Window, WindowBuilder, WindowEvent};
+use winit::ControlFlow;
+use winit::VirtualKeyCode;
+use winit::{ElementState, Event, EventsLoop, KeyboardInput, Window, WindowBuilder, WindowEvent};
 
 use rand::Rng;
-use rusttype::{point, Font, Scale};
-use std::fs::File;
-use std::io::Read;
 use std::sync::Arc;
 use vulkano_text::{DrawText, DrawTextTrait};
 
@@ -262,9 +261,23 @@ fn main() {
         window_size_dependent_setup(&images, render_pass.clone(), &mut dynamic_state);
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
+    let mut player_1_displacement = 0;
     let mut displacement_amount = 0;
     let mut displacement_increment = false;
     let displacement_constant = 1;
+
+    fn displace_player1(direction: String, displacement: i32) -> i32 {
+        if (displacement == 150 && direction == "Down") || (displacement == 0 && direction == "Up")
+        {
+            return displacement;
+        }
+        if direction == "Up" {
+            return displacement - 10;
+        } else if direction == "Down" {
+            return displacement + 10;
+        };
+        displacement
+    }
 
     loop {
         if displacement_amount == 150 || displacement_amount == 0 {
@@ -276,9 +289,8 @@ fn main() {
         if displacement_increment == false {
             displacement_amount -= displacement_constant;
         }
-
         let pc_player1 = vs_player1::ty::Displacement {
-            displacement: displacement_amount as f32 / 100.0,
+            displacement: player_1_displacement as f32 / 100.0,
         };
 
         let pc_player2 = vs_player2::ty::Displacement {
@@ -416,24 +428,6 @@ fn main() {
             .unwrap()
         };
 
-        let offset_buffer = {
-            #[derive(Default, Debug, Clone)]
-            struct Offset {
-                position: [f32; 2],
-            }
-
-            CpuAccessibleBuffer::from_iter(
-                device.clone(),
-                BufferUsage::all(),
-                [Offset {
-                    position: [rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0)],
-                }]
-                .iter()
-                .cloned(),
-            )
-            .unwrap()
-        };
-
         if x > width as f32 {
             x = 0.0;
         } else {
@@ -558,6 +552,36 @@ fn main() {
                 event: WindowEvent::CloseRequested,
                 ..
             } => done = true,
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Up),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                player_1_displacement = displace_player1("Up".to_owned(), player_1_displacement);
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Down),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                player_1_displacement = displace_player1("Down".to_owned(), player_1_displacement);
+            }
             Event::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
