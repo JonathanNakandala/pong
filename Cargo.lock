@@ -589,8 +589,8 @@ dependencies = [
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusttype 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "vulkano 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "vulkano-glyph 0.4.0",
  "vulkano-shaders 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vulkano-text 0.11.1",
  "vulkano-win 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winit 0.19.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -905,16 +905,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "vulkano-glyph"
-version = "0.4.0"
-dependencies = [
- "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "rusttype 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "vulkano 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "vulkano-shaders 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "vulkano-shaders"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -923,6 +913,16 @@ dependencies = [
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "shaderc 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "vulkano-text"
+version = "0.11.1"
+dependencies = [
+ "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusttype 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vulkano 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vulkano-shaders 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

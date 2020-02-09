@@ -18,7 +18,11 @@ use vulkano_win::VkSurfaceBuild;
 use winit::{Event, EventsLoop, Window, WindowBuilder, WindowEvent};
 
 use rand::Rng;
+use rusttype::{point, Font, Scale};
+use std::fs::File;
+use std::io::Read;
 use std::sync::Arc;
+use vulkano_text::{DrawText, DrawTextTrait};
 
 fn main() {
     // Random Number Generator
@@ -185,6 +189,31 @@ fn main() {
         )
         .unwrap(),
     );
+
+    let text_render_pass = Arc::new(
+        vulkano::single_pass_renderpass!(
+            device.clone(),
+            attachments: {
+                color: {
+                    load: Clear,
+                    store: Store,
+                    format: swapchain.format(),
+                    samples: 1,
+                }
+            },
+            pass: {
+                color: [color],
+                depth_stencil: {}
+            }
+        )
+        .unwrap(),
+    );
+
+    let mut draw_text = DrawText::new(device.clone(), queue.clone(), swapchain.clone(), &images);
+
+    let (width, _): (u32, u32) = surface.window().get_inner_size().unwrap().into();
+    let mut x = -200.0;
+
     let pipeline = Arc::new(
         GraphicsPipeline::start()
             .vertex_input_single_buffer()
@@ -405,6 +434,14 @@ fn main() {
             .unwrap()
         };
 
+        if x > width as f32 {
+            x = 0.0;
+        } else {
+            x += 0.4;
+        }
+        draw_text.queue_text(630.0, 200.0, 190.0, [0.0, 1.0, 1.0, 1.0], "0");
+        draw_text.queue_text(800.0, 200.0, 190.0, [0.0, 1.0, 1.0, 1.0], "0");
+
         // Frees no longer needed resources
         previous_frame_end.cleanup_finished();
         // Window Resize: Recreate swapchain, framebuffer and viewport
@@ -426,6 +463,12 @@ fn main() {
             swapchain = new_swapchain;
             framebuffers =
                 window_size_dependent_setup(&new_images, render_pass.clone(), &mut dynamic_state);
+            draw_text = DrawText::new(
+                device.clone(),
+                queue.clone(),
+                swapchain.clone(),
+                &new_images,
+            );
 
             recreate_swapchain = false;
         }
@@ -441,6 +484,8 @@ fn main() {
             };
         // Clear the screen with a colour
         let clear_values = vec![[0.0, 0.0, 0.0, 0.0].into()];
+        let text_clear_values: std::vec::Vec<vulkano::format::ClearValue> =
+            vec![[0.0, 0.0, 0.0, 0.0].into()];
 
         // In order to draw, we have to build a *command buffer*.
         let command_buffer =
@@ -473,12 +518,13 @@ fn main() {
                     (),
                     pc_player2,
                 )
-                .unwrap()
-                .end_render_pass()
-                .unwrap()
-                // Finish building the command buffer by calling `build`.
-                .build()
                 .unwrap();
+        let command_buffer = command_buffer
+            .end_render_pass()
+            .unwrap()
+            .draw_text(&mut draw_text, image_num)
+            .build()
+            .unwrap();
 
         let future = previous_frame_end
             .join(acquire_future)
@@ -530,6 +576,10 @@ fn window_size_dependent_setup(
     dynamic_state: &mut DynamicState,
 ) -> Vec<Arc<dyn FramebufferAbstract + Send + Sync>> {
     let dimensions = images[0].dimensions();
+    println!(
+        "Dimensions: {}x{}",
+        dimensions[0] as f32, dimensions[1] as f32
+    );
 
     let viewport = Viewport {
         origin: [0.0, 0.0],

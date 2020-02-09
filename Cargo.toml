@@ -1,2 +1,2 @@
 [workspace]
-members = ["pong", "vulkano-glyph"]
+members = ["pong", "vulkano-text"]
