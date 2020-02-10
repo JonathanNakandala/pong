@@ -270,7 +270,6 @@ fn main() {
     let displacement_constant = 1;
 
     let mut ball_displacement: [i32; 2] = [0; 2];
-
     fn displace_player(direction: String, displacement: i32) -> i32 {
         if (displacement == 150 && direction == "Down") || (displacement == 0 && direction == "Up")
         {
@@ -289,19 +288,23 @@ fn main() {
     // Just experimentally found the position for the ball displacement so that it intersects with the paddle
     let paddle_y_player1 = -77;
     let paddle_y_player2 = 77;
+    let single_player = false;
 
     loop {
         // Auto Move ball
         if ball_displacement[0] == -100 || ball_displacement[0] == 100 {
             ball_displacement_increment = !ball_displacement_increment;
         }
-
+        // Player Scores a point
         if ball_displacement[0] == -100 {
-            score_player1 = score_player1 + 1;
+            score_player2 = score_player2 + 1;
+            ball_displacement = [0, 0];
         }
         if ball_displacement[0] == 100 {
-            score_player2 = score_player2 + 1;
+            score_player1 = score_player1 + 1;
+            ball_displacement = [0, 0];
         }
+        //
         if ball_displacement_increment == true {
             ball_displacement[0] += displacement_constant;
         }
@@ -310,14 +313,16 @@ fn main() {
         }
 
         // Auto Move Player
-        if player_2_displacement == 150 || player_2_displacement == 0 {
-            displacement_increment = !displacement_increment;
-        }
-        if displacement_increment == true {
-            player_2_displacement += displacement_constant;
-        }
-        if displacement_increment == false {
-            player_2_displacement -= displacement_constant;
+        if single_player == true {
+            if player_2_displacement == 150 || player_2_displacement == 0 {
+                displacement_increment = !displacement_increment;
+            }
+            if displacement_increment == true {
+                player_2_displacement += displacement_constant;
+            }
+            if displacement_increment == false {
+                player_2_displacement -= displacement_constant;
+            }
         }
 
         let paddle_surface_player1: [f32; 2] = [-1.0, -0.5];
@@ -686,7 +691,7 @@ fn main() {
                         input:
                             KeyboardInput {
                                 state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Up),
+                                virtual_keycode: Some(VirtualKeyCode::W),
                                 ..
                             },
                         ..
@@ -700,6 +705,53 @@ fn main() {
                     WindowEvent::KeyboardInput {
                         input:
                             KeyboardInput {
+                                state: ElementState::Released,
+                                virtual_keycode: Some(VirtualKeyCode::W),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {}
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::S),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                player_1_displacement = displace_player("Down".to_owned(), player_1_displacement);
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Up),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                if single_player == false {
+                    player_2_displacement =
+                        displace_player("Down".to_owned(), player_2_displacement);
+                }
+            }
+
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
                                 state: ElementState::Pressed,
                                 virtual_keycode: Some(VirtualKeyCode::Down),
                                 ..
@@ -708,7 +760,9 @@ fn main() {
                     },
                 ..
             } => {
-                player_1_displacement = displace_player("Down".to_owned(), player_1_displacement);
+                if single_player == false {
+                    player_2_displacement = displace_player("Up".to_owned(), player_2_displacement);
+                }
             }
             Event::WindowEvent {
                 event: WindowEvent::Resized(_),
