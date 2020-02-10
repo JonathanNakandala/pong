@@ -309,7 +309,7 @@ fn main() {
             ball_displacement[0] -= displacement_constant;
         }
 
-        // Auto Move Player 2
+        // Auto Move Player
         if player_2_displacement == 150 || player_2_displacement == 0 {
             displacement_increment = !displacement_increment;
         }
@@ -341,6 +341,7 @@ fn main() {
         if ball_displacement[0] == paddle_y_player2 {
             if ball_displacement[1] as f32 / 100.0 >= paddle_surface_position_player2[1]
                 && ball_displacement[1] as f32 / 100.0 <= paddle_surface_position_player2[0]
+            {
                 ball_displacement_increment = !ball_displacement_increment;
             }
         }
