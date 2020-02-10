@@ -264,7 +264,7 @@ fn main() {
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
     let mut player_1_displacement = 0;
-    let mut displacement_amount = 0;
+    let mut player_2_displacement = 0;
     let mut displacement_increment = false;
     let mut ball_displacement_increment = false;
     let displacement_constant = 1;
@@ -286,15 +286,21 @@ fn main() {
 
     let mut score_player1: u8 = 0;
     let mut score_player2: u8 = 0;
+    // Just experimentally found the position for the ball displacement so that it intersects with the paddle
+    let paddle_y_player1 = -77;
+    let paddle_y_player2 = 77;
 
     loop {
         // Auto Move ball
-        if ball_displacement[0] == -100 || ball_displacement[0] == 10 {
+        if ball_displacement[0] == -100 || ball_displacement[0] == 100 {
             ball_displacement_increment = !ball_displacement_increment;
         }
 
         if ball_displacement[0] == -100 {
             score_player1 = score_player1 + 1;
+        }
+        if ball_displacement[0] == 100 {
+            score_player2 = score_player2 + 1;
         }
         if ball_displacement_increment == true {
             ball_displacement[0] += displacement_constant;
@@ -302,22 +308,49 @@ fn main() {
         if ball_displacement_increment == false {
             ball_displacement[0] -= displacement_constant;
         }
-        // Auto Move Player
-        if displacement_amount == 150 || displacement_amount == 0 {
+
+        // Auto Move Player 2
+        if player_2_displacement == 150 || player_2_displacement == 0 {
             displacement_increment = !displacement_increment;
         }
         if displacement_increment == true {
-            displacement_amount += displacement_constant;
+            player_2_displacement += displacement_constant;
         }
         if displacement_increment == false {
-            displacement_amount -= displacement_constant;
+            player_2_displacement -= displacement_constant;
         }
+
+        let paddle_surface_player1: [f32; 2] = [-1.0, -0.5];
+        let paddle_surface_player2: [f32; 2] = [1.0, 0.5];
+        let paddle_surface_position_player1: [f32; 2] = [
+            paddle_surface_player1[0] + player_1_displacement as f32 / 100.0,
+            paddle_surface_player1[1] + player_1_displacement as f32 / 100.0,
+        ];
+        let paddle_surface_position_player2: [f32; 2] = [
+            paddle_surface_player2[0] - player_2_displacement as f32 / 100.0,
+            paddle_surface_player2[1] - player_2_displacement as f32 / 100.0,
+        ];
+        //Ball Bouncing off Paddle Logic
+        if ball_displacement[0] == paddle_y_player1 {
+            if ball_displacement[1] as f32 / 100.0 >= paddle_surface_position_player1[0]
+                && ball_displacement[1] as f32 / 100.0 <= paddle_surface_position_player1[1]
+            {
+                ball_displacement_increment = !ball_displacement_increment;
+            }
+        }
+        if ball_displacement[0] == paddle_y_player2 {
+            if ball_displacement[1] as f32 / 100.0 >= paddle_surface_position_player2[1]
+                && ball_displacement[1] as f32 / 100.0 <= paddle_surface_position_player2[0]
+                ball_displacement_increment = !ball_displacement_increment;
+            }
+        }
+        //
         let pc_player1 = vs_player1::ty::Displacement {
             displacement: player_1_displacement as f32 / 100.0,
         };
 
         let pc_player2 = vs_player2::ty::Displacement {
-            displacement: -displacement_amount as f32 / 100.0,
+            displacement: -player_2_displacement as f32 / 100.0,
         };
 
         let pc_ball = vs_ball::ty::BallPosition {
@@ -327,6 +360,7 @@ fn main() {
         if pc_ball.vector[0] < -1.0 {
             println!("{}", pc_ball.vector[0]);
         }
+
         let vertex_buffer_player1 = {
             #[derive(Default, Debug, Clone)]
             struct Vertex {
@@ -345,11 +379,11 @@ fn main() {
                         color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.8, -1.0],
+                        position: [-0.8, paddle_surface_player1[0]],
                         color: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [-0.9, -0.5],
+                        position: [-0.9, paddle_surface_player1[1]],
                         color: [0.0, 1.0, 1.0],
                     },
                     Vertex {
@@ -389,7 +423,7 @@ fn main() {
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.8, 1.0],
+                        position: [0.8, paddle_surface_player2[0]],
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
@@ -401,7 +435,7 @@ fn main() {
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
-                        position: [0.8, 0.5],
+                        position: [0.8, paddle_surface_player2[1]],
                         colour: [1.0, 1.0, 1.0],
                     },
                     Vertex {
