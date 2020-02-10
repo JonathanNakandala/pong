@@ -297,30 +297,30 @@ fn main() {
         }
         // Player Scores a point
         if ball_displacement[0] == -100 {
-            score_player2 = score_player2 + 1;
+            score_player2 += 1;
             ball_displacement = [0, 0];
         }
         if ball_displacement[0] == 100 {
-            score_player1 = score_player1 + 1;
+            score_player1 += 1;
             ball_displacement = [0, 0];
         }
         //
-        if ball_displacement_increment == true {
+        if ball_displacement_increment {
             ball_displacement[0] += displacement_constant;
         }
-        if ball_displacement_increment == false {
+        if !ball_displacement_increment {
             ball_displacement[0] -= displacement_constant;
         }
 
         // Auto Move Player
-        if single_player == true {
+        if single_player {
             if player_2_displacement == 150 || player_2_displacement == 0 {
                 displacement_increment = !displacement_increment;
             }
-            if displacement_increment == true {
+            if displacement_increment {
                 player_2_displacement += displacement_constant;
             }
-            if displacement_increment == false {
+            if !displacement_increment {
                 player_2_displacement -= displacement_constant;
             }
         }
@@ -741,7 +741,7 @@ fn main() {
                     },
                 ..
             } => {
-                if single_player == false {
+                if !single_player {
                     player_2_displacement =
                         displace_player("Down".to_owned(), player_2_displacement);
                 }
@@ -760,7 +760,7 @@ fn main() {
                     },
                 ..
             } => {
-                if single_player == false {
+                if !single_player {
                     player_2_displacement = displace_player("Up".to_owned(), player_2_displacement);
                 }
             }
