@@ -267,8 +267,10 @@ fn main() {
     let mut player_2_displacement = 0;
     let mut player_2_displacement_velocity: i32 = 0;
     let mut displacement_increment = false;
-    let mut ball_displacement_increment = false;
-    let displacement_constant = 1;
+    let mut ball_displacement_x_increment = false;
+    let mut ball_displacement_y_increment = false;
+    let displacement_x_constant = 1;
+    let displacement_y_constant = 1;
 
     let mut ball_displacement: [i32; 2] = [0; 2];
     fn displace_player(direction: String, displacement: i32) -> i32 {
@@ -289,14 +291,35 @@ fn main() {
     // Just experimentally found the position for the ball displacement so that it intersects with the paddle
     let paddle_y_player1 = -77;
     let paddle_y_player2 = 77;
+    let wall_y_top = -97;
+    let wall_y_bottom = 97;
     let single_player = false;
 
     loop {
-        // Auto Move ball
+        // Ball movement x axis
         if ball_displacement[0] == -100 || ball_displacement[0] == 100 {
-            ball_displacement_increment = !ball_displacement_increment;
+            ball_displacement_x_increment = !ball_displacement_x_increment;
         }
-        // Player Scores a point
+
+        if ball_displacement_x_increment {
+            ball_displacement[0] += displacement_x_constant;
+        }
+        if !ball_displacement_x_increment {
+            ball_displacement[0] -= displacement_x_constant;
+        }
+        // Ball Movement y axis
+        if ball_displacement[1] == wall_y_top || ball_displacement[1] == wall_y_bottom {
+            ball_displacement_y_increment = !ball_displacement_y_increment;
+        }
+
+        if ball_displacement_y_increment {
+            ball_displacement[1] += displacement_y_constant;
+        }
+        if !ball_displacement_y_increment {
+            ball_displacement[1] -= displacement_y_constant;
+        }
+
+        // Point Scoring
         if ball_displacement[0] == -100 {
             score_player2 += 1;
             ball_displacement = [0, 0];
@@ -306,12 +329,6 @@ fn main() {
             ball_displacement = [0, 0];
         }
         //
-        if ball_displacement_increment {
-            ball_displacement[0] += displacement_constant;
-        }
-        if !ball_displacement_increment {
-            ball_displacement[0] -= displacement_constant;
-        }
 
         // Auto Move Player
         if single_player {
@@ -319,13 +336,13 @@ fn main() {
                 displacement_increment = !displacement_increment;
             }
             if displacement_increment {
-                player_2_displacement += displacement_constant;
+                player_2_displacement += displacement_x_constant;
             }
             if !displacement_increment {
-                player_2_displacement -= displacement_constant;
+                player_2_displacement -= displacement_x_constant;
             }
         }
-
+        // Smooth Paddle Movement
         if player_2_displacement_velocity != 0 {
             if player_2_displacement_velocity.is_positive() {
                 player_2_displacement += player_2_displacement_velocity;
@@ -358,17 +375,18 @@ fn main() {
             if ball_displacement[1] as f32 / 100.0 >= paddle_surface_position_player1[0]
                 && ball_displacement[1] as f32 / 100.0 <= paddle_surface_position_player1[1]
             {
-                ball_displacement_increment = !ball_displacement_increment;
+                ball_displacement_x_increment = !ball_displacement_x_increment;
             }
         }
         if ball_displacement[0] == paddle_y_player2 {
             if ball_displacement[1] as f32 / 100.0 >= paddle_surface_position_player2[1]
                 && ball_displacement[1] as f32 / 100.0 <= paddle_surface_position_player2[0]
             {
-                ball_displacement_increment = !ball_displacement_increment;
+                ball_displacement_x_increment = !ball_displacement_x_increment;
             }
         }
         //
+        // GPU Push Constants
         let pc_player1 = vs_player1::ty::Displacement {
             displacement: player_1_displacement as f32 / 100.0,
         };
@@ -378,7 +396,10 @@ fn main() {
         };
 
         let pc_ball = vs_ball::ty::BallPosition {
-            vector: [ball_displacement[0] as f32 / 100.0, 0.0],
+            vector: [
+                ball_displacement[0] as f32 / 100.0,
+                ball_displacement[1] as f32 / 100.0,
+            ],
         };
 
         if pc_ball.vector[0] < -1.0 {
