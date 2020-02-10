@@ -265,6 +265,7 @@ fn main() {
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
     let mut player_1_displacement = 0;
     let mut player_2_displacement = 0;
+    let mut player_2_displacement_velocity: i32 = 0;
     let mut displacement_increment = false;
     let mut ball_displacement_increment = false;
     let displacement_constant = 1;
@@ -322,6 +323,23 @@ fn main() {
             }
             if !displacement_increment {
                 player_2_displacement -= displacement_constant;
+            }
+        }
+
+        if player_2_displacement_velocity != 0 {
+            if player_2_displacement_velocity.is_positive() {
+                player_2_displacement += player_2_displacement_velocity;
+                player_2_displacement_velocity -= 1;
+                if player_2_displacement > 150 {
+                    player_2_displacement = 150;
+                }
+            }
+            if player_2_displacement_velocity.is_negative() {
+                player_2_displacement += player_2_displacement_velocity;
+                player_2_displacement_velocity += 1;
+                if player_2_displacement < 0 {
+                    player_2_displacement = 0;
+                }
             }
         }
 
@@ -742,8 +760,27 @@ fn main() {
                 ..
             } => {
                 if !single_player {
-                    player_2_displacement =
-                        displace_player("Down".to_owned(), player_2_displacement);
+                    //player_2_displacement =
+                    //displace_player("Down".to_owned(), player_2_displacement);
+                    player_2_displacement_velocity += 2;
+                }
+            }
+
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Released,
+                                virtual_keycode: Some(VirtualKeyCode::Up),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                if !single_player {
+                    player_2_displacement_velocity = 4;
                 }
             }
 
@@ -761,7 +798,25 @@ fn main() {
                 ..
             } => {
                 if !single_player {
-                    player_2_displacement = displace_player("Up".to_owned(), player_2_displacement);
+                    //player_2_displacement = displace_player("Up".to_owned(), player_2_displacement);
+                    player_2_displacement_velocity -= 2;
+                }
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Released,
+                                virtual_keycode: Some(VirtualKeyCode::Down),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                if !single_player {
+                    player_2_displacement_velocity = -4;
                 }
             }
             Event::WindowEvent {
