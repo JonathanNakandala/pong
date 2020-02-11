@@ -19,6 +19,7 @@ use winit::{
     WindowEvent,
 };
 
+use rand::Rng;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use vulkano_text::{DrawText, DrawTextTrait};
@@ -297,10 +298,11 @@ fn main() {
     let wall_y_bottom = 97;
     let single_player = false;
     // How long to hold the text of the winner for
-    let mut hold_text_time = 0;
     let mut theres_a_winner = false;
     let mut time_is_set = false;
     let mut time: Instant = Instant::now();
+    // Random number generator for initial y position of ball
+    let mut rng = rand::thread_rng();
 
     loop {
         // Ball movement x axis
@@ -329,11 +331,11 @@ fn main() {
         // Point Scoring
         if ball_displacement[0] == -100 {
             score_player2 += 1;
-            ball_displacement = [0, 0];
+            ball_displacement = [0, rng.gen_range(-97, 97)];
         }
         if ball_displacement[0] == 100 {
             score_player1 += 1;
-            ball_displacement = [0, 0];
+            ball_displacement = [0, rng.gen_range(-97, 97)];
         }
         //
 
