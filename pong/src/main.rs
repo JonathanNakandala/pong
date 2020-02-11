@@ -270,8 +270,11 @@ fn main() {
     let mut player_1_displacement_velocity: i32 = 0;
     let mut player_2_displacement_velocity: i32 = 0;
     let mut displacement_increment = false;
-    let mut ball_displacement_x_increment = false;
-    let mut ball_displacement_y_increment = false;
+    // Random number generator for initial y position of ball and direction
+    let mut rng = rand::thread_rng();
+    let mut ball_displacement_x_increment: bool = rand::random();
+    let mut ball_displacement_y_increment: bool = rand::random();
+    // The speed of the ball
     let displacement_x_constant = 1;
     let displacement_y_constant = 1;
 
@@ -301,8 +304,6 @@ fn main() {
     let mut theres_a_winner = false;
     let mut time_is_set = false;
     let mut time: Instant = Instant::now();
-    // Random number generator for initial y position of ball
-    let mut rng = rand::thread_rng();
 
     loop {
         // Ball movement x axis
