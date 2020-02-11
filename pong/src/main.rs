@@ -20,6 +20,7 @@ use winit::{
 };
 
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use vulkano_text::{DrawText, DrawTextTrait};
 
 fn main() {
@@ -295,6 +296,11 @@ fn main() {
     let wall_y_top = -97;
     let wall_y_bottom = 97;
     let single_player = false;
+    // How long to hold the text of the winner for
+    let mut hold_text_time = 0;
+    let mut theres_a_winner = false;
+    let mut time_is_set = false;
+    let mut time: Instant = Instant::now();
 
     loop {
         // Ball movement x axis
@@ -618,7 +624,30 @@ fn main() {
             [0.0, 1.0, 1.0, 1.0],
             &score_player2.to_string(),
         );
+        let score_to_win = 9;
+        // Player Wins, Reset Score and let them know they won for a bit
+        if (score_player1 == score_to_win || score_player2 == score_to_win) && !time_is_set {
+            theres_a_winner = true;
+            time = Instant::now();
+            time_is_set = true;
+        }
+        if theres_a_winner {
+            if score_player1 == score_to_win {
+                draw_text.queue_text(800.0, 400.0, 150.0, [0.0, 1.0, 1.0, 1.0], "Player 1 Wins!");
+            }
+            if score_player2 == score_to_win {
+                draw_text.queue_text(80.0, 400.0, 150.0, [0.0, 1.0, 1.0, 1.0], "Player 2 Wins!");
+            }
+            ball_displacement[0] = 0;
+            ball_displacement[1] = 0;
 
+            if time.elapsed() > Duration::from_secs(3) {
+                score_player1 = 0;
+                score_player2 = 0;
+                theres_a_winner = false;
+                time_is_set = false;
+            }
+        }
         // Frees no longer needed resources
         previous_frame_end.cleanup_finished();
         // Window Resize: Recreate swapchain, framebuffer and viewport
@@ -669,7 +698,7 @@ fn main() {
                 // Before we can draw, we have to *enter a render pass*.
                 .begin_render_pass(framebuffers[image_num].clone(), false, clear_values)
                 .unwrap()
-                // The first subpass of the render pass: We add a draw command.
+                // The subpasses of the render pass are each of these
                 .draw(
                     pipeline_net.clone(),
                     &dynamic_state,
@@ -713,8 +742,6 @@ fn main() {
             .join(acquire_future)
             .then_execute(queue.clone(), command_buffer)
             .unwrap()
-            // The color output is now expected to contain our triangle. But in order to show it on
-            // the screen, we have to *present* the image by calling `present`.
             // This function does not actually present the image immediately. Instead it submits a
             // present command at the end of the queue. This means that it will only be presented once
             // the GPU has finished executing the command buffer that draws the triangle.
