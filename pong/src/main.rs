@@ -265,6 +265,7 @@ fn main() {
     let mut previous_frame_end = Box::new(sync::now(device.clone())) as Box<dyn GpuFuture>;
     let mut player_1_displacement = 0;
     let mut player_2_displacement = 0;
+    let mut player_1_displacement_velocity: i32 = 0;
     let mut player_2_displacement_velocity: i32 = 0;
     let mut displacement_increment = false;
     let mut ball_displacement_x_increment = false;
@@ -273,7 +274,7 @@ fn main() {
     let displacement_y_constant = 1;
 
     let mut ball_displacement: [i32; 2] = [0; 2];
-    fn displace_player(direction: String, displacement: i32) -> i32 {
+    /*     fn displace_player(direction: String, displacement: i32) -> i32 {
         if (displacement == 150 && direction == "Down") || (displacement == 0 && direction == "Up")
         {
             return displacement;
@@ -284,7 +285,7 @@ fn main() {
             return displacement + 10;
         };
         displacement
-    }
+    } */
 
     let mut score_player1: u8 = 0;
     let mut score_player2: u8 = 0;
@@ -343,6 +344,22 @@ fn main() {
             }
         }
         // Smooth Paddle Movement
+        if player_1_displacement_velocity != 0 {
+            if player_1_displacement_velocity.is_positive() {
+                player_1_displacement += player_1_displacement_velocity;
+                player_1_displacement_velocity -= 1;
+                if player_1_displacement > 150 {
+                    player_1_displacement = 150;
+                }
+            }
+            if player_1_displacement_velocity.is_negative() {
+                player_1_displacement += player_1_displacement_velocity;
+                player_1_displacement_velocity += 1;
+                if player_1_displacement < 0 {
+                    player_1_displacement = 0;
+                }
+            }
+        }
         if player_2_displacement_velocity != 0 {
             if player_2_displacement_velocity.is_positive() {
                 player_2_displacement += player_2_displacement_velocity;
@@ -737,7 +754,8 @@ fn main() {
                     },
                 ..
             } => {
-                player_1_displacement = displace_player("Up".to_owned(), player_1_displacement);
+                //player_1_displacement = displace_player("Up".to_owned(), player_1_displacement);
+                player_1_displacement_velocity -= 2;
             }
             Event::WindowEvent {
                 event:
@@ -751,7 +769,9 @@ fn main() {
                         ..
                     },
                 ..
-            } => {}
+            } => {
+                player_1_displacement_velocity = -4;
+            }
             Event::WindowEvent {
                 event:
                     WindowEvent::KeyboardInput {
@@ -765,7 +785,23 @@ fn main() {
                     },
                 ..
             } => {
-                player_1_displacement = displace_player("Down".to_owned(), player_1_displacement);
+                //player_1_displacement = displace_player("Down".to_owned(), player_1_displacement);
+                player_1_displacement_velocity += 2;
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Released,
+                                virtual_keycode: Some(VirtualKeyCode::S),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                player_1_displacement_velocity = 4;
             }
             Event::WindowEvent {
                 event:
