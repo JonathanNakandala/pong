@@ -274,7 +274,6 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut ball_displacement_x_increment: bool = rand::random();
     let mut ball_displacement_y_increment: bool = rand::random();
-    // The speed of the ball
     let displacement_x_constant = 1;
     let displacement_y_constant = 1;
 
