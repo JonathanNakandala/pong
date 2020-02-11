@@ -2,7 +2,10 @@
 name = "pong"
 version = "1.0.0"
 authors = ["Jonathan Nakandala"]
+description = "Simple Game of Pong using Vulkano, Winit and Vulkano-text"
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/JonathanNakandala/pong"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

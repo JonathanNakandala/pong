@@ -41,3 +41,6 @@ You need rust installed.
 Run:
 ```cargo run --release```
 
+## vulkano-text
+I couldn't figure out how to get around the mismatched dependancies of vulkano-text so I just copied it into a separate workspace and changed the cargo.toml
+
